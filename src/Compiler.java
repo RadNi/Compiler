@@ -3,6 +3,14 @@
  */
 public class Compiler {
     public static void main(String[] args) {
-        System.out.println("Testing");
+        new Compiler().start();
+    }
+
+    private void start()
+    {
+        SymbolTable symbolTable = new SymbolTable(); // TODO implement SymbolTable
+        CompilerScanner scanner = new CompilerScanner(symbolTable); // TODO implement scanner
+        Parser parser = new Parser(symbolTable, scanner);
+        parser.parse();
     }
 }
