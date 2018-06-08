@@ -12,6 +12,7 @@ import java.util.Scanner;
 public class CompilerScanner
 {
     private Scanner scanner;
+    private String current="";
     public SymbolTable symbolTable;
 
     public CompilerScanner(SymbolTable symbolTable, String fileName)
@@ -26,54 +27,85 @@ public class CompilerScanner
 
     }
 
-    public Pair<Pair<String, String>, Attribute> getNextToken() // TODO unhandled Error while scanning
+    public Pair<String, String> getNextToken() // TODO unhandled Error while scanning
     {
+
         String tokenType="";
         String token="";
-        if(scanner.hasNext("((\\+|-)?)([0-9])+[A-Za-z]")) {
-            System.out.println("Error in scanning");
-            System.out.println(scanner.next("((\\+|-)?)([0-9])+[A-Za-z]")); //Error in scanning, unexpected Token detected
-
-        }else if (scanner.hasNext("[A-Za-z]([A-Za-z]|[0-9])*")) { //the token is String
-            token = scanner.next("[A-Za-z]([A-Za-z]|[0-9])*");
-            if (token.equals("EOF")){
-                tokenType = "EOF";
-            } else if (token.equals("int")) {
-                tokenType = "int";
-            } else if (token.equals("void")) {
-                tokenType = "void";
-            } else if (token.equals("if")) {
-                tokenType = "if";
-            } else if (token.equals("else")) {
-                tokenType = "else";
-            } else if (token.equals("while")) {
-                tokenType = "while";
-            } else if (token.equals("return")) {
-                tokenType = "return";
-            } else {
-                tokenType = "ID";
+        if (this.current.length() == 0) {
+            if (scanner.hasNext()){
+                current = scanner.next();
             }
-        }else if (scanner.hasNext("((\\+|-)?)([0-9])+")) {
-            token = scanner.next("((\\+|-)?)([0-9])+");
-            tokenType = "NUM";  // this id NUM
-        }else if (scanner.hasNext("[0-9]")) {
-            token = scanner.next("[0-9]");
-            tokenType = "digit";
-        }else if (scanner.hasNext("[A-Za-z]")) {
-            token = scanner.next("[A-Za-z]");
-            tokenType = "letter";
-        }else if (scanner.hasNext("==")) {
-            token = scanner.next("==");
-            tokenType = "==";
-        }else if (scanner.hasNext("[-+=()*<,;\\[\\]{}]")) {
-            token = scanner.next("[-+=()*<,;\\[\\]{}]");
-            tokenType = token;
-        }
-        Pair<String, String> entry = new Pair<>(token, tokenType);
-        if(this.symbolTable.getSymbolTableEntry(entry) == null) {
-            this.symbolTable.setSymbolTableEntry(entry, new Attribute());
+            else {
+                Pair<String, String> entry = new Pair<>("$", "$");
+                if (this.symbolTable.getSymbolTableEntry(entry) == null) {
+                    this.symbolTable.setSymbolTableEntry(entry, new Attribute());
+                }
+                Pair<String, Pair<String, Attribute>> temp = this.symbolTable.getSymbolTableEntry(entry);
+                return new Pair<>(temp.getValue().getKey(), temp.getKey());
+            }
         }
 
-        return this.symbolTable.getSymbolTableEntry(entry);
+//        System.out.println("here " + current);
+
+        for (int i = current.length() ; i > 0; i--) {
+            Scanner tmpsc = new Scanner(current.substring(0, i));
+            if (tmpsc.hasNext("((\\+|-)?)([0-9])+[A-Za-z]+")) {
+                System.out.println("Error in scanning");
+                System.out.println(tmpsc.next("((\\+|-)?)([0-9])+[A-Za-z]*")); //Error in scanning, unexpected Token detected
+
+            } else if (tmpsc.hasNext("[A-Za-z]([A-Za-z]|[0-9])*")) { //the token is String
+                token = tmpsc.next("[A-Za-z]([A-Za-z]|[0-9])*");
+                switch (token) {
+                    case "EOF":
+                        tokenType = "EOF";
+                        break;
+                    case "int":
+                        tokenType = "int";
+                        break;
+                    case "void":
+                        tokenType = "void";
+                        break;
+                    case "if":
+                        tokenType = "if";
+                        break;
+                    case "else":
+                        tokenType = "else";
+                        break;
+                    case "while":
+                        tokenType = "while";
+                        break;
+                    case "return":
+                        tokenType = "return";
+                        break;
+                    default:
+                        tokenType = "ID";
+                        break;
+                }
+            } else if (tmpsc.hasNext("((\\+|-)?)([0-9])+")) {
+                token = tmpsc.next("((\\+|-)?)([0-9])+");
+                tokenType = "NUM";  // this id NUM
+            } else if (tmpsc.hasNext("==")) {
+                token = tmpsc.next("==");
+                tokenType = "==";
+            } else if (tmpsc.hasNext("[-+=()*<,;\\[\\]{}]")) {
+                token = tmpsc.next("[-+=()*<,;\\[\\]{}]");
+                tokenType = token;
+            } else
+                continue;
+            this.current = this.current.substring(token.length(), this.current.length());
+//            System.out.println(this.current);
+            Pair<String, String> entry = new Pair<>(token, tokenType);
+            if (this.symbolTable.getSymbolTableEntry(entry) == null) {
+                this.symbolTable.setSymbolTableEntry(entry, new Attribute());
+            }
+            Pair<String, Pair<String, Attribute>> temp = this.symbolTable.getSymbolTableEntry(entry);
+            return new Pair<>(temp.getValue().getKey(), temp.getKey());
+        }
+        if (current.length() > 0) {
+            System.out.println("unexpected Token detected"); //TODO error unhandled
+        }
+
+        return null;
     }
 }

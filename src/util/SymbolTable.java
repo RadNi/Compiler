@@ -10,14 +10,14 @@ import java.util.HashMap;
  */
 public class SymbolTable
 {
-    private HashMap<Pair<String, String>, Attribute> table;
-    public Pair<Pair<String, String>, Attribute> getSymbolTableEntry(Pair<String, String> entry) {
-        if (table.containsKey(entry)) {
-            return new Pair<>(entry, table.get(entry));
+    private HashMap<String, Pair<String, Attribute>> table = new HashMap<>();
+    public Pair<String, Pair<String, Attribute>> getSymbolTableEntry(Pair<String, String> entry) {
+        if (table.containsKey(entry.getKey())) {
+            return new Pair<>(entry.getKey(), table.get(entry.getKey()));
         }
         return null;
     }
     public void setSymbolTableEntry(Pair<String, String> entry, Attribute attribute) {
-        this.table.put(entry, attribute);
+        this.table.put(entry.getKey(), new Pair<>(entry.getValue(), attribute));
     }
 }
