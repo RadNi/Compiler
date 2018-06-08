@@ -10,7 +10,7 @@ public class CompilerScanner
 
     }
 
-    public Pair<String, String> getNextToken()
+    public Pair<String, String> getNextToken() // TODO when tokens end, send a '$' token
     {
         return null;
     }

@@ -9,24 +9,71 @@ import java.util.Scanner;
  */
 public class Help
 {
+    private static HashMap<String, String> parseTable = new HashMap<>();
+
     public static void main(String[] args) throws IOException, ClassNotFoundException
     {
         Scanner in = new Scanner(System.in);
         ParseTableData parseTableData;
 
-        FileInputStream fis = new FileInputStream("pt.data");
+        FileInputStream fis = new FileInputStream("parse_table.data");
+//        FileInputStream fis = new FileInputStream("pt.data");
         ObjectInputStream ois = new ObjectInputStream(fis);
-        parseTableData = (ParseTableData) ois.readObject();
+//        parseTableData = (ParseTableData) ois.readObject();
+        parseTable = (HashMap<String, String>) ois.readObject();
 
-//        System.out.println("Enter Non-Terminals: ");
-//        setNonTerminals(in, parseTableData);
-//        System.out.println("Enter Terminals: ");
-//        setTerminals(in, parseTableData);
-//
-//        saveParseTableData(parseTableData);
-        System.out.println("Enter something to get it's ID: ");
-        showProductions(in, parseTableData);
-//        startGettingIds(in, parseTableData);
+        System.out.println("Start adding to parse table:");
+//        setParseTable(in, parseTableData);
+
+        saveParseTable();
+    }
+
+    private static void saveParseTable() throws IOException
+    {
+        FileOutputStream fos = new FileOutputStream("parse_table.data");
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+        oos.writeObject(parseTable);
+    }
+
+    private static void setParseTable(Scanner in, ParseTableData parseTableData)
+    {
+        HashMap<Character, String> idToNonTerminals = parseTableData.getIdToNonTerminals();
+        HashMap<Character, String> idToTerminals = parseTableData.getIdToTerminals();
+
+        while (true)
+        {
+            String num = in.next();
+
+            if (num.equals("exit"))
+            {
+                return;
+            } else if (num.equals("remove"))
+            {
+                parseTable.remove(in.next());
+                continue;
+            }
+
+            Character labelID = in.next().charAt(0);
+            String label;
+            if (idToNonTerminals.containsKey(labelID))
+            {
+                label = idToNonTerminals.get(labelID);
+            } else if (idToTerminals.containsKey(labelID))
+            {
+                label = idToTerminals.get(labelID);
+            } else if (labelID == '$')
+            {
+                label = "$";
+            } else
+            {
+                System.out.println("Invalid input, try again.");
+                continue;
+            }
+
+            String key = num + label;
+            String value = in.next();
+            parseTable.put(key, value);
+        }
     }
 
     private static void showProductions(Scanner in, ParseTableData parseTableData)

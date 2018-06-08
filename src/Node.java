@@ -36,6 +36,11 @@ public class Node
         return children;
     }
 
+    public void setChildren(ArrayList<Node> children)
+    {
+        this.children = children;
+    }
+
     public String getValue()
     {
         return value;
