@@ -1,6 +1,9 @@
 package parsetable;
 
+import util.Production;
+
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -10,22 +13,49 @@ import java.util.Scanner;
 public class Help
 {
     private static HashMap<String, String> parseTable = new HashMap<>();
+    private static ArrayList<Production> productions = new ArrayList<>();
 
     public static void main(String[] args) throws IOException, ClassNotFoundException
     {
         Scanner in = new Scanner(System.in);
-        ParseTableData parseTableData;
 
-        FileInputStream fis = new FileInputStream("parse_table.data");
+        FileInputStream fis = new FileInputStream("productions.data");
 //        FileInputStream fis = new FileInputStream("pt.data");
         ObjectInputStream ois = new ObjectInputStream(fis);
-//        parseTableData = (ParseTableData) ois.readObject();
-        parseTable = (HashMap<String, String>) ois.readObject();
+//        ParseTableData parseTableData = (ParseTableData) ois.readObject();
+        productions = (ArrayList<Production>) ois.readObject();
 
-        System.out.println("Start adding to parse table:");
-//        setParseTable(in, parseTableData);
+        System.out.println();
+//        setProductions(in, parseTableData);
+//        saveProductions();
+    }
 
-        saveParseTable();
+    private static void saveProductions() throws IOException
+    {
+        FileOutputStream fos = new FileOutputStream("productions.data");
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+        oos.writeObject(productions);
+    }
+
+    private static void setProductions(Scanner in, ParseTableData parseTableData)
+    {
+        while (true)
+        {
+            String lhs = in.next();
+
+            if (lhs.equals("exit"))
+            {
+                return;
+            } else if (lhs.equals("remove"))
+            {
+                productions.remove(productions.size() - 1);
+                continue;
+            }
+
+            String rhs = in.next();
+
+            productions.add(new Production(lhs.charAt(0), rhs, parseTableData));
+        }
     }
 
     private static void saveParseTable() throws IOException

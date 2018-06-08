@@ -1,4 +1,5 @@
 import javafx.util.Pair;
+import util.SymbolTable;
 
 /**
  * Created by msi1 on 6/7/2018.

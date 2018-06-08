@@ -1,3 +1,5 @@
+import util.SymbolTable;
+
 /**
  * Created by RadNi on 6/5/18.
  */
@@ -8,7 +10,7 @@ public class Compiler {
 
     private void start()
     {
-        SymbolTable symbolTable = new SymbolTable(); // TODO implement SymbolTable
+        SymbolTable symbolTable = new SymbolTable(); // TODO implement util.SymbolTable
         CompilerScanner scanner = new CompilerScanner(symbolTable); // TODO implement scanner
         Parser parser = new Parser(symbolTable, scanner);
         parser.parse();

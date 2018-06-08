@@ -1,4 +1,7 @@
 import javafx.util.Pair;
+import util.Node;
+import util.Production;
+import util.SymbolTable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -68,7 +71,7 @@ public class Parser
 
     /**
      *
-     * @param reduceNumber Production number
+     * @param reduceNumber util.Production number
      * @param inputToken The Input Token
      * @return true if reached acc
      */
