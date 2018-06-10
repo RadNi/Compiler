@@ -1,6 +1,8 @@
 import javafx.util.Pair;
 import util.SymbolTable;
 
+import java.util.ArrayList;
+
 /**
  * Created by RadNi on 6/5/18.
  */
@@ -21,9 +23,13 @@ public class Compiler {
 
     private void start()
     {
-        SymbolTable symbolTable = new SymbolTable(); // TODO implement util.SymbolTable
-        CompilerScanner scanner = new CompilerScanner(symbolTable, "code"); // TODO implement scanner
-        Parser parser = new Parser(symbolTable, scanner);
+        ArrayList<SymbolTable> symbolTables = new ArrayList<>();
+        SymbolTable mainScopeSymbolTable = new SymbolTable(); // TODO implement util.SymbolTable
+        symbolTables.add(mainScopeSymbolTable);
+
+        CompilerScanner scanner = new CompilerScanner(symbolTables, "code"); // TODO implement scanner
+        CodeGenerator codeGenerator = new CodeGenerator(symbolTables, scanner);
+        Parser parser = new Parser(codeGenerator, scanner);
         parser.parse();
     }
 }

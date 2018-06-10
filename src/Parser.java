@@ -1,7 +1,6 @@
 import javafx.util.Pair;
 import util.Node;
 import util.Production;
-import util.SymbolTable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,13 +15,13 @@ public class Parser
     private CompilerScanner scanner;
     private ArrayList<Pair<String, String>> parseStack;
     private HashMap<Pair<String, String>, Node> nodesMap;
-    private Node rootNode;
+    private CodeGenerator codeGenerator;
 
 
-    public Parser(SymbolTable symbolTable, CompilerScanner scanner)
+    public Parser(CodeGenerator codeGenerator, CompilerScanner scanner)
     {
+        this.codeGenerator = codeGenerator;
         this.scanner = scanner;
-        this.nodesMap = new HashMap<>();
         initStack();
         // TODO init parseTable
         // TODO init productions
@@ -43,7 +42,7 @@ public class Parser
 
             if (parseOperation == null)
             {
-                // TODO handle error
+                // TODO handle error with panic mode
             }
 
             if (doParseOperation(parseOperation, token))
@@ -78,13 +77,19 @@ public class Parser
     private boolean reduceFromStack(String reduceNumber, Pair<String, String> inputToken)
     {
         Production production = productions.get(Integer.parseInt(reduceNumber));
-        this.rootNode = reduceToNewNode(production);
+        popElements(production.size());
         Pair<String, String> stackElement = new Pair<>("non_terminal", production.getLHS());
         String topNum = getStackTop();
         String newNum = parseTable.get(topNum + stackElement.getValue());
 
         parseStack.add(stackElement);
         parseStack.add(new Pair<>("stack_number", newNum));
+
+        Pair<String, String> lastRHSPart = production.getRHS().get(production.size() - 1);
+        if (lastRHSPart.getKey().equals("action_symbol"))
+        {
+            codeGenerator.generateCode(lastRHSPart.getValue());
+        }
 
         String parseOperation = parseTable.get(newNum + getLabel(inputToken));
         return doParseOperation(parseOperation, inputToken);
@@ -103,54 +108,6 @@ public class Parser
         }
 
         return token.getKey();
-    }
-
-    /**
-     * Pop items from stack and create a new node for the tree
-     * @param production The production related to the reduce operation
-     * @return The new node of the tree
-     */
-    private Node reduceToNewNode(Production production)
-    {
-        ArrayList<Pair<String, String>> poppedElements = popElements(production.size());
-        ArrayList<Pair<String, String>> productionRHS = new ArrayList<>();
-        productionRHS.addAll(production.getRHS());
-
-        Node resultNode = new Node(production.getLHS());
-        ArrayList<Node> resultNodeChildren = resultNode.getChildren();
-
-        for (Pair<String, String> poppedElement : poppedElements)
-        {
-            addSymbolChildren(resultNode, resultNodeChildren, productionRHS);
-
-            if (nodesMap.containsKey(poppedElement))
-            {
-                resultNodeChildren.add(nodesMap.get(poppedElement));
-            } else
-            {
-                resultNodeChildren.add(new Node(resultNode, poppedElement.getKey(), poppedElement.getValue()));
-            }
-        }
-
-        resultNode.setChildren(resultNodeChildren);
-        return resultNode;
-    }
-
-    private void addSymbolChildren(Node parent, ArrayList<Node> parentNodeChildren,
-                                   ArrayList<Pair<String, String>> productionRHS)
-    {
-        for (int i = 0; i < productionRHS.size();)
-        {
-            Pair<String, String> productionRHSElement = productionRHS.get(i);
-
-            if (!productionRHSElement.getKey().equals("action_symbol"))
-            {
-                return;
-            }
-
-            parentNodeChildren.add(new Node(parent, productionRHSElement.getKey(), productionRHSElement.getValue()));
-            productionRHS.remove(productionRHSElement);
-        }
     }
 
     private ArrayList<Pair<String, String>> popElements(int size)

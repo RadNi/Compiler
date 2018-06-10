@@ -4,6 +4,7 @@ import util.SymbolTable;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -24,6 +25,11 @@ public class CompilerScanner
         }
 
         this.symbolTable = symbolTable;
+
+    }
+
+    public CompilerScanner(ArrayList<SymbolTable> symbolTables, String fileName)
+    {
 
     }
 
