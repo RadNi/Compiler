@@ -13,8 +13,9 @@ public class CodeGenerator
     private String[] programBlock;
     private ArrayList<String> semanticStack;
     private int nextTempAddress = 100;
-    private int nextVarAdderess = 500;
+    private int nextVarAddress = 500;
     private int i = 1;
+    private String mainAddress = "";
 
 
     public CodeGenerator(ArrayList<SymbolTable> symbolTables, CompilerScanner scanner)
@@ -30,10 +31,10 @@ public class CodeGenerator
         switch (actionSymbol)
         {
             case "#file_start":
-                fileStart();
+                startFile();
                 break;
-            case "#jp":
-                jump();
+            case "#main":
+                jumpMain();
                 break;
             case "#push":
                 push(input);
@@ -55,12 +56,70 @@ public class CodeGenerator
                 break;
             case "#insert_fun":
                 insertFunction(input);
+                break;
+            case "#add_set_param":
+                addAndSetParam(input, "int");
+                break;
+            case "#add_set_param_array":
+                addAndSetParam(input, "array");
+                break;
+            case "#scope_start":
+                symbolTables.add(new SymbolTable());
+                break;
+            case "#scope_end":
+                symbolTables.remove(symbolTables.size() - 1);
+                break;
+            case "#pop":
+                pop(1);
+                break;
+            case "#save":
+                push(String.valueOf(i++));
+                break;
+            case "#jpf_save":
+                jumpFalseAndSave();
+                break;
         }
     }
 
-    private void insertFunction(String input)
+    private void jumpFalseAndSave()
     {
 
+    }
+
+    private void addAndSetParam(String input, String type)
+    {
+        String paramType = getFromSSTop(0);
+        if (paramType.equals("void"))
+        {
+            // TODO invalid type error
+        }
+        pop(1);
+
+        String functionName = getFromSSTop(0);
+        Attribute attribute = findAttribute(functionName);
+        attribute.addParam(type, input);
+
+        String stackPointer = getFromSSTop(2);
+        addToProgramBlock("sub", new String[]{stackPointer, "#1", stackPointer}, i);
+        i++;
+        String varAddress = findVarAddress(input);
+        addToProgramBlock("assign", new String[]{"@" + stackPointer, }, i);
+        i++;
+    }
+
+    private void insertFunction(String input) // TODO handle output
+    {
+        if (!mainAddress.equals(""))
+        {
+            // TODO main not last function error
+        } else if (input.equals("main"))
+        {
+            mainAddress = String.valueOf(i);
+        }
+        Attribute attribute = findAttribute(input);
+        attribute.setFunctionAddress(String.valueOf(i));
+        attribute.setFunctionType(getFromSSTop(0));
+        push(input);
     }
 
     private void insertArrayVariable()
@@ -108,14 +167,20 @@ public class CodeGenerator
         push(input);
     }
 
-    private void jump()
+    private void jumpMain()
     {
         String jumpAddress = getFromSSTop(0);
-        addToProgramBlock("jp", new String[] {jumpAddress}, i - 1);
+        if (jumpAddress.equals(""))
+        {
+            // TODO no main error
+
+        }
+        addToProgramBlock("jp", new String[] {mainAddress}, Integer.parseInt(jumpAddress));
+        i++;
         pop(3);
     }
 
-    private void fileStart()
+    private void startFile()
     {
         String counterAdd = getTemp();
         push(counterAdd);
@@ -165,7 +230,7 @@ public class CodeGenerator
                 break;
         }
 
-        programBlock[index] = instruction;
+        programBlock[index - 1] = instruction;
     }
 
     private String getTemp()
@@ -199,9 +264,9 @@ public class CodeGenerator
         String varAddress = attribute.getVarAddress();
         if (varAddress == null)
         {
-            String address = String.valueOf(nextVarAdderess);
+            String address = String.valueOf(nextVarAddress);
             attribute.setVarAddress(address);
-            nextVarAdderess++;
+            nextVarAddress++;
             return address;
         }
 

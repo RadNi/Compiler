@@ -1,5 +1,7 @@
 package util;
 
+import javafx.util.Pair;
+
 import java.util.ArrayList;
 
 /**
@@ -14,15 +16,21 @@ public class Attribute { // I blame RadNi for this mess
 
     private String functionType;
     private String functionAddress;
-    private ArrayList<String> paramTypes;
+    private ArrayList<Pair<String, String>> params;
 
     public Attribute(String type) {
         this.type = type;
         this.varType = null;
         this.varAddress = null;
+        this.arraySize = -1;
         this.functionType = null;
         this.functionAddress = null;
-        this.paramTypes = new ArrayList<>();
+        this.params = new ArrayList<>();
+    }
+
+    public void addParam(String type, String name)
+    {
+        params.add(new Pair<>(type, name));
     }
 
     public String getType() {
@@ -69,14 +77,14 @@ public class Attribute { // I blame RadNi for this mess
         this.functionAddress = functionAddress;
     }
 
-    public ArrayList<String> getParamTypes()
+    public ArrayList<Pair<String, String>> getParams()
     {
-        return paramTypes;
+        return params;
     }
 
-    public void setParamTypes(ArrayList<String> paramTypes)
+    public void setParams(ArrayList<Pair<String, String>> params)
     {
-        this.paramTypes = paramTypes;
+        this.params = params;
     }
 
     public int getArraySize()
