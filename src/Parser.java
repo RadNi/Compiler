@@ -45,7 +45,7 @@ public class Parser
                 // TODO handle error with panic mode
             }
 
-            if (doParseOperation(parseOperation, token))
+            if (doParseOperation(parseOperation, token))    //TODO should insert else here ?!!
             {
                 break;
             }
