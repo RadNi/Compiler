@@ -13,8 +13,11 @@ import java.util.Scanner;
  */
 public class CompilerScanner
 {
-    private Scanner scanner;
-    private String current="";
+    private Scanner stringScanner;
+    private Scanner lineScanner;
+    private String currentString="";
+    private String currentLine="";
+    private int lineNumber = 0;
     private boolean checkDecleration = false;
     private ArrayList<SymbolTable> symbolTables;
     private Node root;
@@ -142,7 +145,7 @@ public class CompilerScanner
     public CompilerScanner(ArrayList<SymbolTable> symbolTables, String fileName)
     {
         try {
-            this.scanner = new Scanner(new FileInputStream(fileName));
+            this.lineScanner = new Scanner(new FileInputStream(fileName));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -151,7 +154,7 @@ public class CompilerScanner
         this.root = this.makeTransitionDFA();
 
         // for adding output function in global scope
-        
+
         symbolTables.get(0).setSymbolTableEntry("output", new Attribute("ID"));
 
     }
@@ -187,7 +190,7 @@ public class CompilerScanner
             if (!flag) {
                 try {
                     System.out.println(input);
-                    throw new Exception("Irregular Token detected"); // TODO error   Irregular token detected
+                    throw new Exception("Irregular Token " + input+ " detected at line #" + lineNumber); // TODO error   Irregular token detected
                 } catch (Exception e) {
                     e.printStackTrace();
                     return null;
@@ -200,19 +203,35 @@ public class CompilerScanner
     public Pair<String, String> getNextToken() // TODO unhandled Error while scanning
     {
 
-        if (this.current.length() == 0) {
-            if (scanner.hasNext()) {
-                current = scanner.next();
-            } else {
+        if (this.currentString.length() == 0) {
+            if (this.stringScanner == null) {
+                this.currentLine = lineScanner.nextLine();
+                lineNumber++;
+                this.stringScanner = new Scanner(this.currentLine);
+                this.currentString = stringScanner.next();
+            }
+            else if (!this.lineScanner.hasNextLine() && !this.stringScanner.hasNext()) {
                 return insertToTopStackSymbolTable("$", "$");
             }
+            else if (this.lineScanner.hasNextLine() && !this.stringScanner.hasNext()) {
+                this.currentLine = lineScanner.nextLine();
+                lineNumber++;
+                this.stringScanner = new Scanner(currentLine);
+                this.currentString = stringScanner.next();
+            }
+            else if (this.stringScanner.hasNext()){
+                this.currentString = this.stringScanner.next();
+            }
         }
+//        if (this.currentString.contains("   ")){
+//            System.out.println("eeeee");
+//        }
 
         String tokenType;
         String token;
 
 
-        Pair<String, String> pair = doDFA(this.current);
+        Pair<String, String> pair = doDFA(this.currentString);
         token = pair.getKey();
         tokenType = pair.getValue();
 
@@ -220,7 +239,7 @@ public class CompilerScanner
             token = Character.toString(token.charAt(0));
             tokenType = token;
         }
-        this.current = this.current.substring(token.length(), this.current.length());
+        this.currentString = this.currentString.substring(token.length(), this.currentString.length());
         lastTokenTypeDigitOrLetter = tokenType.equals("NUM") || tokenType.equals("ID");
 
         Attribute attribute = getEntryInSymbolTables(token);
@@ -244,7 +263,7 @@ public class CompilerScanner
             return new Pair<>(attribute.getType(), token);
         }
 
-        if (current.length() > 0) {
+        if (currentString.length() > 0) {
             System.out.println("unexpected Token detected"); //TODO error Unhandled Error
         }
 
