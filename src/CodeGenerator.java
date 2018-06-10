@@ -13,6 +13,7 @@ public class CodeGenerator
     private ArrayList<String> semanticStack;
     private int nextTempAddress = 100;
     private int nextVarAdderess = 500;
+    private int i = 0;
 
 
     public CodeGenerator(ArrayList<SymbolTable> symbolTables, CompilerScanner scanner)
@@ -25,7 +26,22 @@ public class CodeGenerator
 
     public void generateCode(String actionSymbol)
     {
-        // TODO switch case
+        switch (actionSymbol)
+        {
+            case "#file_start":
+                fileStart();
+        }
+    }
+
+    private void fileStart()
+    {
+        String counterAdd = getTemp();
+        push(counterAdd);
+
+        String spAdd = getTemp();
+        push(spAdd);
+
+
     }
 
     private void addToProgramBlock(String instructionName, ArrayList<String> inputs, int index)
@@ -67,5 +83,25 @@ public class CodeGenerator
         }
 
         programBlock[index] = instruction;
+    }
+
+    private String getTemp()
+    {
+        String result = String.valueOf(nextTempAddress);
+        nextTempAddress++;
+        return result;
+    }
+
+    private void pop(int num)
+    {
+        for (int i = 0; i < num; i++)
+        {
+            semanticStack.remove(semanticStack.size() - 1);
+        }
+    }
+
+    private void push(String element)
+    {
+        semanticStack.add(element);
     }
 }
