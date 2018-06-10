@@ -1,6 +1,7 @@
 import com.sun.istack.internal.Nullable;
 import javafx.util.Pair;
 import util.Attribute;
+import util.ErrorHandler;
 import util.SymbolTable;
 
 import java.io.FileInputStream;
@@ -23,7 +24,7 @@ public class CompilerScanner
     private Node root;
     private ArrayList<Node>nodes = new ArrayList<>();
     private boolean lastTokenTypeDigitOrLetter = false;
-    private int errorHandlerIndex = 0;
+    private ErrorHandler errorHandler;
 
 
     class Node{
@@ -161,17 +162,19 @@ public class CompilerScanner
         }
 
         public String handleError(String input, int index) {
-            System.out.println("Irregular token:"+ input.charAt(index) + " detected at line #" + lineNumber);
-            System.out.println("token ignored!");
-            System.out.println(this.nodeNumber);
-//            System.out.println(this.token);
+            ArrayList<String>error = new ArrayList<>();
+            error.add("Irregular token:"+ input.charAt(index) + " detected at line #" + lineNumber);
+            errorHandler.addError(error);
             switch (this.token) {
                 case "*":
                     input = input.substring(0, index) + "*" + input.substring(index);
-//                    System.out.println("ei baba " + input);
+                    error.add("token removed from input");
+
                     break;
                 case "delete":
                     input = input.substring(0, index) + input.substring(index+1);
+                    error.add("token replaced with *");
+
                     break;
             }
 //            input = input.substring(0, index) + input.substring(index + 1);
@@ -223,7 +226,7 @@ public class CompilerScanner
         return root;
     }
 
-    public CompilerScanner(ArrayList<SymbolTable> symbolTables, String fileName)
+    public CompilerScanner(ArrayList<SymbolTable> symbolTables, String fileName, ErrorHandler errorHandler)
     {
         try {
             this.lineScanner = new Scanner(new FileInputStream(fileName));
@@ -233,6 +236,7 @@ public class CompilerScanner
 
         this.symbolTables = symbolTables;
         this.root = this.makeTransitionDFA();
+        this.errorHandler = errorHandler;
 
         // for adding output function in global scope
 
@@ -255,7 +259,7 @@ public class CompilerScanner
     public Pair<String, Pair<String, String>> doDFA(String input) {
         Node node = root;
         int index = 0;
-        input += "$";
+        input += "$";   // TODO     if input contains $ everything will collapse:)
         while (true) {
             boolean errorFlag = false;
             if (node.isFinal) {
@@ -311,9 +315,9 @@ public class CompilerScanner
 //        while (true) {
 //            try {
         pair = doDFA(this.currentString);
-        Scanner tst = new Scanner(System.in);
-        tst.next();
-        System.out.println(pair.getKey() + " " + pair.getValue().getKey());
+//        Scanner tst = new Scanner(System.in);
+//        tst.next();
+//        System.out.println(pair.getKey() + " " + pair.getValue().getKey());
 //                break;
 //            } catch (Exception e) {
 //                e.printStackTrace();
