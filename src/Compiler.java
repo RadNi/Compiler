@@ -1,4 +1,5 @@
 import javafx.util.Pair;
+import util.ErrorHandler;
 import util.SymbolTable;
 
 import java.util.ArrayList;
@@ -9,8 +10,21 @@ import java.util.ArrayList;
 public class Compiler {
     public static void main(String[] args) {
 
-        CompilerScanner compilerScanner = new CompilerScanner(new SymbolTable(), "src/tst_code.txt");
-        Pair<String, String> pair = compilerScanner.getNextToken();
+        ArrayList<SymbolTable> symbolTables = new ArrayList<>();
+        symbolTables.add(new SymbolTable());
+        symbolTables.add(new SymbolTable());
+        ErrorHandler scannerErrorHandler = new ErrorHandler("Scanner");
+        CompilerScanner compilerScanner = new CompilerScanner(symbolTables, "src/tst_code.txt", scannerErrorHandler);
+        Pair<String, String> pair;
+        compilerScanner.setCheckDecleration(true);
+//        pair = compilerScanner.doDFA("$$");
+//        System.out.println(pair.getKey() + " " + pair.getValue());
+
+        do {
+            pair = compilerScanner.getNextToken();
+            System.out.println(pair.getKey() + " " + pair.getValue());
+
+        }while (!pair.getValue().equals("$"));
         System.out.println(pair.getKey() + " " + pair.getValue());
         for (int i = 0; i < 10; i++) {
             pair = compilerScanner.getNextToken();
@@ -18,6 +32,7 @@ public class Compiler {
 
         }
 
+        scannerErrorHandler.printStack();
 //        new Compiler().start();
     }
 
@@ -27,7 +42,7 @@ public class Compiler {
         SymbolTable mainScopeSymbolTable = new SymbolTable(); // TODO implement util.SymbolTable
         symbolTables.add(mainScopeSymbolTable);
 
-        CompilerScanner scanner = new CompilerScanner(symbolTables, "code"); // TODO implement scanner
+        CompilerScanner scanner = new CompilerScanner(symbolTables, "code", new ErrorHandler("Scanner")); // TODO implement scanner
         CodeGenerator codeGenerator = new CodeGenerator(symbolTables, scanner);
         Parser parser = new Parser(codeGenerator, scanner);
         parser.parse();

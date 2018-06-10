@@ -35,22 +35,58 @@ public class Parser
 
     public void parse()
     {
-        while (true)
-        {
+        while (true) {
             Pair<String, String> token = scanner.getNextToken();
             String parseOperation = parseTable.get(getStackTop() + getLabel(token));
 
-            if (parseOperation == null)
-            {
+            if (parseOperation == null) {
                 // TODO handle error with panic mode
+                int stateNumber = giveStateNumberFromTopOfStack();
+                while (true) {
+                    if (haseEntry(stateNumber) == null)
+                        break;
+                }
+                if (haseEntry(stateNumber) != null) {
+                    String label = haseEntry(stateNumber);
+                    while (!follow(label).contains(token.getValue())) {
+                        token = scanner.getNextToken();
+                    }
+                }
+                parseOperation = parseTable.get(getStackTop() + getLabel(token));
             }
+            // now you can continue parsing with token and stack
 
-            if (doParseOperation(parseOperation, token))    //TODO should insert else here ?!!
+            if (doParseOperation(parseOperation, token))
             {
                 break;
             }
         }
     }
+
+    private int giveStateNumberFromTopOfStack() {   //TODO  please return state number of the Top of the stack !!!
+        return 0;
+    }
+
+    private ArrayList<String> follow(String label) {
+        //  TODO    need follow of label
+        return null;
+    }
+
+    private String haseEntry(int stateNumber) {
+        ArrayList<String>labels = getAllValidLables();
+        for (int i = 0; i < labels.size(); i++) {
+            if (parseStack.contains(Integer.toString(stateNumber)+labels.get(i))) {
+                return labels.get(i);
+            }
+        }
+        return null;
+    }
+
+    private ArrayList<String> getAllValidLables() {
+        //  TODO this method should return all Valid column name in GOTO table
+        return null;
+    }
+
 
     private boolean doParseOperation(String parseOperation, Pair<String, String> inputToken)
     {

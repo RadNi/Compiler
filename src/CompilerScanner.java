@@ -164,7 +164,6 @@ public class CompilerScanner
         public String handleError(String input, int index) {
             ArrayList<String>error = new ArrayList<>();
             error.add("Irregular token:"+ input.charAt(index) + " detected at line #" + lineNumber);
-            errorHandler.addError(error);
             switch (this.token) {
                 case "*":
                     input = input.substring(0, index) + "*" + input.substring(index);
@@ -177,6 +176,8 @@ public class CompilerScanner
 
                     break;
             }
+            errorHandler.addError(error, Integer.toString(lineNumber), "Unexpected Token");
+
 //            input = input.substring(0, index) + input.substring(index + 1);
 //            System.out.println("in error :          " + input);
             return input;
@@ -283,7 +284,7 @@ public class CompilerScanner
         }
     }
 
-    public Pair<String, String> getNextToken() // TODO unhandled Error while scanning
+    public Pair<String, String> getNextToken()
     {
 
         if (this.currentString.length() == 0) {
@@ -350,7 +351,9 @@ public class CompilerScanner
                     insertToTopStackSymbolTable(token, tokenType);
                     return new Pair<>(tokenType, token);
                 } else {
-                    System.out.println("Error can not declare token here");   //TODO error Unhandled Error
+                    ArrayList<String>error = new ArrayList<>();
+                    error.add("Can not declare token here");
+                    this.errorHandler.addError(error, Integer.toString(lineNumber), "not Declaration");
                 }
             }else {
                 insertToTopStackSymbolTable(token, tokenType);
@@ -359,13 +362,18 @@ public class CompilerScanner
 
         } else {
             if (this.checkDecleration && tokenType.equals("ID")) {
-                System.out.println("Error can not declare a token twice: " + token); //TODO error Unhandled Error
+                ArrayList<String>error = new ArrayList<>();
+
+                error.add("Can not declare a token twice: " + token);
+                errorHandler.addError(error, Integer.toString(lineNumber), "Token Duplication");
             }
             return new Pair<>(attribute.getType(), token);
         }
 
         if (currentString.length() > 0) {
-            System.out.println("unexpected Token detected"); //TODO error Unhandled Error
+            ArrayList<String>error = new ArrayList<>();
+            error.add("Unexpected Token detected");
+            errorHandler.addError(error, Integer.toString(lineNumber), "Unexpected Token");
         }
 
         return null;
