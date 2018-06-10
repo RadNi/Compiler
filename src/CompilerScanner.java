@@ -14,6 +14,7 @@ public class CompilerScanner
 {
     private Scanner scanner;
     private String current="";
+    private boolean checkDecleration;
     public SymbolTable symbolTable;
 
     public CompilerScanner(SymbolTable symbolTable, String fileName)
@@ -45,10 +46,10 @@ public class CompilerScanner
             else {
                 Pair<String, String> entry = new Pair<>("$", "$");
                 if (this.symbolTable.getSymbolTableEntry(entry) == null) {
-                    this.symbolTable.setSymbolTableEntry(entry, new Attribute());
+                    this.symbolTable.setSymbolTableEntry(entry.getKey(), new Attribute(entry.getValue(), ""));
                 }
-                Pair<String, Pair<String, Attribute>> temp = this.symbolTable.getSymbolTableEntry(entry);
-                return new Pair<>(temp.getValue().getKey(), temp.getKey());
+                Pair<String, Attribute> temp = this.symbolTable.getSymbolTableEntry(entry);
+                return new Pair<>(temp.getValue().getType(), temp.getKey());
             }
         }
 
@@ -103,15 +104,19 @@ public class CompilerScanner
 //            System.out.println(this.current);
             Pair<String, String> entry = new Pair<>(token, tokenType);
             if (this.symbolTable.getSymbolTableEntry(entry) == null) {
-                this.symbolTable.setSymbolTableEntry(entry, new Attribute());
+                this.symbolTable.setSymbolTableEntry(token, new Attribute(tokenType, ""));
             }
-            Pair<String, Pair<String, Attribute>> temp = this.symbolTable.getSymbolTableEntry(entry);
-            return new Pair<>(temp.getValue().getKey(), temp.getKey());
+            Pair<String, Attribute> temp = this.symbolTable.getSymbolTableEntry(entry);
+            return new Pair<>(temp.getValue().getType(), temp.getKey());
         }
         if (current.length() > 0) {
-            System.out.println("unexpected Token detected"); //TODO error unhandled
+            System.out.println("unexpected Token detected"); //TODO error Unhandled Error
         }
 
         return null;
+    }
+
+    public void setCheckDecleration(boolean checkDecleration) {
+        this.checkDecleration = checkDecleration;
     }
 }
