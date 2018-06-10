@@ -1,3 +1,4 @@
+import util.Attribute;
 import util.SymbolTable;
 
 import java.util.ArrayList;
@@ -37,12 +38,79 @@ public class CodeGenerator
             case "#push":
                 push(input);
                 break;
+            case "#dec_start":
+                scanner.setCheckDecleration(true);
+                break;
+            case "#dec_end":
+                scanner.setCheckDecleration(false);
+                break;
+            case "#push_id":
+                pushId(input);
+                break;
+            case "#insert_normal_id":
+                insertNormalVariable();
+                break;
+            case "#insert_array_id":
+                insertArrayVariable();
+                break;
+            case "#insert_fun":
+                insertFunction(input);
         }
+    }
+
+    private void insertFunction(String input)
+    {
+
+    }
+
+    private void insertArrayVariable()
+    {
+        int arraySize = Integer.parseInt(getFromSSTop(0));
+        pop(1);
+
+        String idName = getFromSSTop(0);
+        pop(1);
+
+        String varType = getFromSSTop(0);
+        pop(1);
+        if (varType.equals("void"))
+        {
+            // TODO error
+        } else if (arraySize < 0)
+        {
+            // TODO error
+        }
+
+        Attribute attribute = findAttribute(idName); // TODO check if attribute is null
+        attribute.setVarType("array");
+        attribute.setArraySize(arraySize);
+    }
+
+    private void insertNormalVariable()
+    {
+        String idName = getFromSSTop(0);
+        pop(1);
+
+        String varType = getFromSSTop(0);
+        if (varType.equals("void"))
+        {
+            // TODO error
+        }
+        pop(1);
+
+        Attribute attribute = findAttribute(idName); // TODO check if attribute is null
+        attribute.setVarType("int");
+    }
+
+    private void pushId(String input)
+    {
+        findVarAddress(input);
+        push(input);
     }
 
     private void jump()
     {
-        String jumpAddress = semanticStack.get(semanticStack.size() - 1);
+        String jumpAddress = getFromSSTop(0);
         addToProgramBlock("jp", new String[] {jumpAddress}, i - 1);
         pop(3);
     }
@@ -118,5 +186,45 @@ public class CodeGenerator
     private void push(String element)
     {
         semanticStack.add(element);
+    }
+
+    private String findVarAddress(String input) // TODO check if this is correct
+    {
+        Attribute attribute = findAttribute(input);
+        if (attribute == null)
+        {
+            return null;
+        }
+
+        String varAddress = attribute.getVarAddress();
+        if (varAddress == null)
+        {
+            String address = String.valueOf(nextVarAdderess);
+            attribute.setVarAddress(address);
+            nextVarAdderess++;
+            return address;
+        }
+
+        return varAddress;
+    }
+
+    private Attribute findAttribute(String input)
+    {
+        for (int j = symbolTables.size() - 1; j <= 0; j--)
+        {
+            Attribute attribute = symbolTables.get(j).getSymbolTableEntry(input);
+
+            if (attribute != null)
+            {
+                return attribute;
+            }
+        }
+
+        return null;
+    }
+
+    private String getFromSSTop(int indexFromTop)
+    {
+        return semanticStack.get(semanticStack.size() - 1 - indexFromTop);
     }
 }
