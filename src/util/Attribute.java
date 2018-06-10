@@ -1,25 +1,26 @@
 package util;
 
+import java.util.ArrayList;
+
 /**
  * Created by RadNi on 6/8/18.
  */
-public class Attribute {
+public class Attribute { // I blame RadNi for this mess
     private String type;
-    private String rest;
-    public Attribute(String type, String rest) {
+
+    private String varType;
+    private String varAddress;
+
+    private String functionType;
+    private String functionAddress;
+    private ArrayList<String> paramTypes;
+
+    public Attribute(String type) {
         this.type = type;
-        this.rest = rest;
+        this.paramTypes = new ArrayList<>();
     }
 
     public String getType() {
         return type;
-    }
-
-    public String getRest() {
-        return rest;
-    }
-
-    public void setRest(String rest) {
-        this.rest = rest;
     }
 }
