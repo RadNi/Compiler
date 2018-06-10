@@ -42,9 +42,11 @@ public class Compiler {
         SymbolTable mainScopeSymbolTable = new SymbolTable(); // TODO implement util.SymbolTable
         symbolTables.add(mainScopeSymbolTable);
 
+        ErrorHandler errorHandler = new ErrorHandler("Parser");
         CompilerScanner scanner = new CompilerScanner(symbolTables, "code", new ErrorHandler("Scanner")); // TODO implement scanner
         CodeGenerator codeGenerator = new CodeGenerator(symbolTables, scanner);
-        Parser parser = new Parser(codeGenerator, scanner);
+        Parser parser = new Parser(codeGenerator, scanner, errorHandler);
         parser.parse();
+        errorHandler.printStack();
     }
 }
