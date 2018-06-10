@@ -13,6 +13,7 @@ public class CodeGenerator
     private ArrayList<String> semanticStack;
     private int nextTempAddress = 100;
     private int nextVarAdderess = 500;
+    private int i = 1;
 
 
     public CodeGenerator(ArrayList<SymbolTable> symbolTables, CompilerScanner scanner)
@@ -23,49 +24,99 @@ public class CodeGenerator
         this.semanticStack = new ArrayList<>();
     }
 
-    public void generateCode(String actionSymbol)
+    public void generateCode(String actionSymbol, String input)
     {
-        // TODO switch case
+        switch (actionSymbol)
+        {
+            case "#file_start":
+                fileStart();
+                break;
+            case "#jp":
+                jump();
+                break;
+            case "#push":
+                push(input);
+                break;
+        }
     }
 
-    private void addToProgramBlock(String instructionName, ArrayList<String> inputs, int index)
+    private void jump()
+    {
+        String jumpAddress = semanticStack.get(semanticStack.size() - 1);
+        addToProgramBlock("jp", new String[] {jumpAddress}, i - 1);
+        pop(3);
+    }
+
+    private void fileStart()
+    {
+        String counterAdd = getTemp();
+        push(counterAdd);
+
+        String spAdd = getTemp();
+        push(spAdd);
+
+        push(String.valueOf(i));
+        i++;
+    }
+
+    private void addToProgramBlock(String instructionName, String[] inputs, int index)
     {
         String instruction = "";
 
         switch (instructionName)
         {
             case "add":
-                instruction = "(ADD, " + inputs.get(0) + ", " + inputs.get(1) + ", " + inputs.get(2) + ")";
+                instruction = "(ADD, " + inputs[0] + ", " + inputs[1] + ", " + inputs[2] + ")";
                 break;
             case "sub":
-                instruction = "(SUB, " + inputs.get(0) + ", " + inputs.get(1) + ", " + inputs.get(2) + ")";
+                instruction = "(SUB, " + inputs[0] + ", " + inputs[1] + ", " + inputs[2] + ")";
                 break;
             case "assign":
-                instruction = "(ASSIGN, " + inputs.get(0) + ", " + inputs.get(1) + ")";
+                instruction = "(ASSIGN, " + inputs[0] + ", " + inputs[1] + ")";
                 break;
             case "eq":
-                instruction = "(EQ, " + inputs.get(0) + ", " + inputs.get(1) + ", " + inputs.get(2) + ")";
+                instruction = "(EQ, " + inputs[0] + ", " + inputs[1] + ", " + inputs[2] + ")";
                 break;
             case "jpf":
-                instruction = "(JPF, " + inputs.get(0) + ", " + inputs.get(1) + ")";
+                instruction = "(JPF, " + inputs[0] + ", " + inputs[1] + ")";
                 break;
             case "jp":
-                instruction = "(JP, " + inputs.get(0) + ")";
+                instruction = "(JP, " + inputs[0] + ")";
                 break;
             case "lt":
-                instruction = "(LT, " + inputs.get(0) + ", " + inputs.get(1) + ", " + inputs.get(2) + ")";
+                instruction = "(LT, " + inputs[0] + ", " + inputs[1] + ", " + inputs[2] + ")";
                 break;
             case "mult":
-                instruction = "(MULT, " + inputs.get(0) + ", " + inputs.get(1) + ", " + inputs.get(2) + ")";
+                instruction = "(MULT, " + inputs[0] + ", " + inputs[1] + ", " + inputs[2] + ")";
                 break;
             case "not":
-                instruction = "(NOT, " + inputs.get(0) + ", " + inputs.get(1) + ")";
+                instruction = "(NOT, " + inputs[0] + ", " + inputs[1] + ")";
                 break;
             case "print":
-                instruction = "(PRINT, " + inputs.get(0) + ", " + inputs.get(1) + ", " + inputs.get(2) + ")";
+                instruction = "(PRINT, " + inputs[0] + ", " + inputs[1] + ", " + inputs[2] + ")";
                 break;
         }
 
         programBlock[index] = instruction;
+    }
+
+    private String getTemp()
+    {
+        String result = String.valueOf(nextTempAddress);
+        nextTempAddress++;
+        return result;
+    }
+
+    private void pop(int num)
+    {
+        for (int i = 0; i < num; i++)
+        {
+            semanticStack.remove(semanticStack.size() - 1);
+        }
+    }
+
+    private void push(String element)
+    {
+        semanticStack.add(element);
     }
 }

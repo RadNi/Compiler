@@ -88,7 +88,7 @@ public class Parser
         Pair<String, String> lastRHSPart = production.getRHS().get(production.size() - 1);
         if (lastRHSPart.getKey().equals("action_symbol"))
         {
-            codeGenerator.generateCode(lastRHSPart.getValue());
+            codeGenerator.generateCode(lastRHSPart.getValue(), inputToken.getValue());
         }
 
         String parseOperation = parseTable.get(newNum + getLabel(inputToken));
