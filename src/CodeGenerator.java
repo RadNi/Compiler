@@ -78,12 +78,59 @@ public class CodeGenerator
             case "#jpf_save":
                 jumpFalseAndSave();
                 break;
+            case "#jp":
+                jump();
+                break;
+            case "#label":
+                push(String.valueOf(i));
+                break;
+            case "#while":
+                jumpOnWhile();
+                break;
+            case "#return_void":
+                returnVoid();
+                break;
         }
+    }
+
+    private void returnVoid()
+    {
+
+    }
+
+    private void jumpOnWhile()
+    {
+        String pbAddress = getFromSSTop(0);
+        pop(1);
+
+        String condition = getFromSSTop(0);
+        pop(1);
+
+        String jumpAddress = getFromSSTop(0);
+        pop(1);
+
+        addToProgramBlock("jp", new String[]{jumpAddress}, i);
+        i++;
+        addToProgramBlock("jpf", new String[]{condition, String.valueOf(i)}, Integer.parseInt(pbAddress));
+    }
+
+    private void jump()
+    {
+        String pbAddress = getFromSSTop(0);
+        pop(1);
+        addToProgramBlock("jp", new String[]{String.valueOf(i)}, Integer.parseInt(pbAddress));
     }
 
     private void jumpFalseAndSave()
     {
+        String pbAddress = getFromSSTop(0);
+        pop(1);
+        String condition = getFromSSTop(0);
+        pop(1);
 
+        addToProgramBlock("jpf", new String[]{condition, String.valueOf(i)}, Integer.parseInt(pbAddress));
+        push(String.valueOf(i));
+        i++;
     }
 
     private void addAndSetParam(String input, String type)
@@ -103,7 +150,7 @@ public class CodeGenerator
         addToProgramBlock("sub", new String[]{stackPointer, "#1", stackPointer}, i);
         i++;
         String varAddress = findVarAddress(input);
-        addToProgramBlock("assign", new String[]{"@" + stackPointer, }, i);
+        addToProgramBlock("assign", new String[]{"@" + stackPointer, varAddress}, i);
         i++;
     }
 
@@ -125,6 +172,8 @@ public class CodeGenerator
     private void insertArrayVariable()
     {
         int arraySize = Integer.parseInt(getFromSSTop(0));
+        String firstArrayIndexAddress = String.valueOf(nextVarAddress);
+        nextVarAddress += arraySize; // TODO check if this is correct
         pop(1);
 
         String idName = getFromSSTop(0);
@@ -143,6 +192,9 @@ public class CodeGenerator
         Attribute attribute = findAttribute(idName); // TODO check if attribute is null
         attribute.setVarType("array");
         attribute.setArraySize(arraySize);
+        String arrayAddress = attribute.getVarAddress();
+        addToProgramBlock("assign", new String[]{"#" + firstArrayIndexAddress, arrayAddress}, i); // TODO check if correct
+        i++;
     }
 
     private void insertNormalVariable()
@@ -176,7 +228,6 @@ public class CodeGenerator
 
         }
         addToProgramBlock("jp", new String[] {mainAddress}, Integer.parseInt(jumpAddress));
-        i++;
         pop(3);
     }
 
@@ -187,7 +238,8 @@ public class CodeGenerator
 
         String spAdd = getTemp();
         push(spAdd);
-
+        addToProgramBlock("assign", new String[]{"#400", "@" + spAdd}, i);
+        i++;
         push(String.valueOf(i));
         i++;
     }
