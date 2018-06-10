@@ -129,6 +129,13 @@ public class CompilerScanner
         }
     }
 
+    class Error extends Node {
+
+        public Error(int nodeNumber, String token, String tokenType) {
+            super(nodeNumber, true, token, tokenType);
+        }
+    }
+
 
     private Node makeTransitionDFA(){
         this.root = new Node(0, false, "", "");
@@ -144,11 +151,25 @@ public class CompilerScanner
         temp = new Node(7, false, "", "");
         root.addNeighbor(temp, "digit");
         temp.addNeighbor(temp, "digit");
+        temp.addNeighbor(new Error(11, "*", "*"), "letter");
         temp.addNeighbor(new Node(8, true, "getUntilLast", "digit"), "not digit");
         Node temp2 = new Node(9, false, "", "");
         root.addNeighbor(temp2, "+ -");
         temp2.addNeighbor(temp, "digit");
         temp2.addNeighbor(new Node(10, true, "getUntilLast", "getUntilLast"), "not digit");
+        temp2 = new Node(12, false, "", "");
+        root.addNeighbor(temp2, "/");
+        temp = new Node(13, false, "", "");
+        temp2.addNeighbor(temp, "*");
+        Error error = new Error(17, "error", "error");
+        temp2.addNeighbor(error, "not *");
+        temp2 = new Node(14, false, "", "");
+        temp.addNeighbor(temp2, "*");
+        temp.addNeighbor(temp, "not *");
+        Node temp3 = new Node(15, true, "comment", "comment");
+        temp2.addNeighbor(temp3, "/");
+        temp2.addNeighbor(temp, "not /");
+        root.addNeighbor(error, "not all");
 
         return root;
     }
@@ -196,15 +217,12 @@ public class CompilerScanner
                 input = input.substring(0, index) + input.substring(index + 1);
                 this.errorHandlerIndex++;
             }
-//            System.out.println("az inja : " + input.charAt(index));
             for (int i = 0; i < node.neighbors.size(); i++) {
                 if (node.canIterate(i, input.charAt(index))) {
                     node = node.neighbors.get(i);
-//                    System.out.println("done");
                     break;
                 }
             }
-//                    throw new Exception("Irregular Token " + input.charAt(index)+ " detected at " + lineNumber+ ":" + index);
             index++;
         }
     }
