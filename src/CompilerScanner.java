@@ -103,10 +103,10 @@ public class CompilerScanner
                         tokenType_ = input.substring(0, input.length() - 1);
                         break;
                     case "letter":
-                        tokenType_ = "letter";
+                        tokenType_ = "ID";
                         break;
                     case "digit":
-                        tokenType_ = "digit";
+                        tokenType_ = "NUM";
                         break;
                 }
                 return new Pair<>(token_, tokenType_);
@@ -149,6 +149,11 @@ public class CompilerScanner
 
         this.symbolTables = symbolTables;
         this.root = this.makeTransitionDFA();
+
+        // for adding output function in global scope
+        
+        symbolTables.get(0).setSymbolTableEntry("output", new Attribute("ID"));
+
     }
 
     private Pair<String, String > insertToTopStackSymbolTable(String token, String tokenType) {
@@ -166,27 +171,26 @@ public class CompilerScanner
     public Pair<String, String> doDFA(String input) { // TODO  edit current String after this
         Node node = root;
         int index = 0;
+        boolean flag = false;
+        input += "$";
         while (true) {
             if (node.isFinal) {
-                System.out.println("yes" + index);
-                try {
-                    return node.getTokenFromInput(input.substring(0, index));
-                } catch (StringIndexOutOfBoundsException e) {
-                    return node.getTokenFromInput(input);
-                }
+                return node.getTokenFromInput(input.substring(0, index));
             }
             for (int i = 0; i < node.neighbors.size(); i++) {
-                if (index < input.length()) {
-                    if (node.canIterate(i, input.charAt(index))) {
-                        node = node.neighbors.get(i);
-                        System.out.println("omad");
-                        break;
-                    }
-                }else {
-                    if (node.canIterate(i, '|')) {
-                        node = node.neighbors.get(i);
-                        break;
-                    }
+                if (node.canIterate(i, input.charAt(index))) {
+                    node = node.neighbors.get(i);
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) {
+                try {
+                    System.out.println(input);
+                    throw new Exception("Irregular Token detected"); // TODO error   Irregular token detected
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return null;
                 }
             }
             index++;
@@ -212,77 +216,30 @@ public class CompilerScanner
         token = pair.getKey();
         tokenType = pair.getValue();
 
-        if (lastTokenTypeDigitOrLetter && tokenType.equals("digit") && (token.charAt(0) == '+'  || token.charAt(0) == '-')) {
-            token = Character.toString(tokenType.charAt(0));
+        if (lastTokenTypeDigitOrLetter && tokenType.equals("NUM") && (token.charAt(0) == '+'  || token.charAt(0) == '-')) {
+            token = Character.toString(token.charAt(0));
             tokenType = token;
         }
-//        System.out.println("here " + current);
-
-//        for (int i = current.length() ; i > 0; i--) {
-//            Scanner tmpsc = new Scanner(current.substring(0, i));
-//            if (tmpsc.hasNext("((\\+|-)?)([0-9])+[A-Za-z]+")) {
-//                System.out.println("Error in scanning");
-//                System.out.println(tmpsc.next("((\\+|-)?)([0-9])+[A-Za-z]*")); //Error in scanning, unexpected Token detected
-//
-//            } else if (tmpsc.hasNext("[A-Za-z]([A-Za-z]|[0-9])*")) { //the token is String
-//                token = tmpsc.next("[A-Za-z]([A-Za-z]|[0-9])*");
-//                important = false;
-//                switch (token) {
-//                    case "EOF":
-//                        tokenType = "EOF";
-//                        break;
-//                    case "int":
-//                        tokenType = "int";
-//                        break;
-//                    case "void":
-//                        tokenType = "void";
-//                        break;
-//                    case "if":
-//                        tokenType = "if";
-//                        break;
-//                    case "else":
-//                        tokenType = "else";
-//                        break;
-//                    case "while":
-//                        tokenType = "while";
-//                        break;
-//                    case "return":
-//                        tokenType = "return";
-//                        break;
-//                    default:
-//                        tokenType = "ID";
-//                        important = true;
-//                        break;
-//                }
-//            } else if (tmpsc.hasNext("((\\+|-)?)([0-9])+")) {
-//                token = tmpsc.next("((\\+|-)?)([0-9])+");
-//                tokenType = "NUM";  // this id NUM
-//            } else if (tmpsc.hasNext("==")) {
-//                token = tmpsc.next("==");
-//                tokenType = "==";
-//            } else if (tmpsc.hasNext("[-+=()*<,;\\[\\]{}]")) {
-//                token = tmpsc.next("[-+=()*<,;\\[\\]{}]");
-//                tokenType = token;
-//            } else
-//                continue;
         this.current = this.current.substring(token.length(), this.current.length());
+        lastTokenTypeDigitOrLetter = tokenType.equals("NUM") || tokenType.equals("ID");
 
-        System.out.println("current " + current);
-        Scanner scanner1 = new Scanner(System.in);
-        scanner1.next();
-//            System.out.println(this.current);
         Attribute attribute = getEntryInSymbolTables(token);
         if (attribute == null) {
-            if (this.checkDecleration) {
+            if (tokenType.equals("ID")) {
+                if (this.checkDecleration) {
+                    insertToTopStackSymbolTable(token, tokenType);
+                    return new Pair<>(tokenType, token);
+                } else {
+                    System.out.println("Error can not declare token here");   //TODO error Unhandled Error
+                }
+            }else {
                 insertToTopStackSymbolTable(token, tokenType);
                 return new Pair<>(tokenType, token);
-            } else {
-                System.out.println("Error can not declare token here");   //TODO error Unhandled Error
             }
 
         } else {
-            if (this.checkDecleration) {
-                System.out.println("Error can not declare a token twice"); //TODO error Unhandled Error
+            if (this.checkDecleration && tokenType.equals("ID")) {
+                System.out.println("Error can not declare a token twice: " + token); //TODO error Unhandled Error
             }
             return new Pair<>(attribute.getType(), token);
         }
@@ -303,7 +260,6 @@ public class CompilerScanner
             if (attribute != null)
                 return attribute;
         }
-        System.out.println("here");
         return null;
     }
 
