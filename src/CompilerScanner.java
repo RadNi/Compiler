@@ -51,16 +51,16 @@ public class CompilerScanner
 
         public boolean canIterate(int index, char input) {
             switch (this.transitions.get(index)) {
+                case "$":
+                    if (input == '$')
+                        return true;
+                    break;
                 case "not =":
                     if (input != '=')
                         return true;
                     break;
-                case "not digit" :
-                    if (!Character.isDigit(input))
-                        return true;
-                    break;
-                case "not letter digit" :
-                    if (!Character.isLetterOrDigit(input))
+                case "not digit valid" :
+                    if ("<*(),;[]{}=+-$".contains(Character.toString(input)) || Character.isLetter(input))
                         return true;
                     break;
                 case "letter":
@@ -87,6 +87,31 @@ public class CompilerScanner
                     if ("<*(),;[]{}".contains(Character.toString(input)))
                         return true;
                     break;
+                case "not op":
+                    if ("<*(),;[]{}+-".contains(Character.toString(input)))
+                        return true;
+                    break;
+                case "/":
+                    if (input == '/')
+                        return true;
+                    break;
+                case "*":
+                    if (input == '*')
+                        return true;
+                    break;
+                case "not /":
+                    if (input != '/')
+                        return true;
+                case "not *":
+                    if (input != '*')
+                        return true;
+                    break;
+                case "not all":
+                    if (!(Character.isLetterOrDigit(input) || "<*(),;[]{}+-=".contains(Character.toString(input))))
+                        return true;
+                    break;
+                default:
+                    System.out.println("something where wrong" + this.transitions.get(index));
             }
             return false;
         }
@@ -134,11 +159,32 @@ public class CompilerScanner
         public Error(int nodeNumber, String token, String tokenType) {
             super(nodeNumber, true, token, tokenType);
         }
+
+        public String handleError(String input, int index) {
+            System.out.println("Irregular token:"+ input.charAt(index) + " detected at line #" + lineNumber);
+            System.out.println("token ignored!");
+            System.out.println(this.nodeNumber);
+//            System.out.println(this.token);
+            switch (this.token) {
+                case "*":
+                    input = input.substring(0, index) + "*" + input.substring(index);
+//                    System.out.println("ei baba " + input);
+                    break;
+                case "delete":
+                    input = input.substring(0, index) + input.substring(index+1);
+                    break;
+            }
+//            input = input.substring(0, index) + input.substring(index + 1);
+//            System.out.println("in error :          " + input);
+            return input;
+        }
+
     }
 
 
     private Node makeTransitionDFA(){
         this.root = new Node(0, false, "", "");
+        Error error = new Error(17, "delete", "delete");
         root.addNeighbor(new Node(1, true, "this", "this"), "<*(),;[]{}");
         Node temp = new Node(2, false, "", "");
         root.addNeighbor(temp, "=");
@@ -147,21 +193,24 @@ public class CompilerScanner
         temp = new Node(5, false, "", "");
         root.addNeighbor(temp, "letter");
         temp.addNeighbor(temp, "letter digit");
-        temp.addNeighbor(new Node(6, true, "getUntilLast", "letter"), "not letter digit");
+        temp.addNeighbor(new Node(6, true, "getUntilLast", "letter"), "not op");
+        temp.addNeighbor(new Node(18, true, "getUntilLast", "letter"), "$");
+        temp.addNeighbor(error, "not all");
         temp = new Node(7, false, "", "");
         root.addNeighbor(temp, "digit");
         temp.addNeighbor(temp, "digit");
         temp.addNeighbor(new Error(11, "*", "*"), "letter");
-        temp.addNeighbor(new Node(8, true, "getUntilLast", "digit"), "not digit");
+        temp.addNeighbor(new Node(8, true, "getUntilLast", "digit"), "not digit valid");
+        temp.addNeighbor(new Node(19, true, "getUntilLast", "digit"), "$");
+        temp.addNeighbor(error, "not all");
         Node temp2 = new Node(9, false, "", "");
         root.addNeighbor(temp2, "+ -");
         temp2.addNeighbor(temp, "digit");
-        temp2.addNeighbor(new Node(10, true, "getUntilLast", "getUntilLast"), "not digit");
+        temp2.addNeighbor(new Node(10, true, "getUntilLast", "getUntilLast"), "not digit valid");
         temp2 = new Node(12, false, "", "");
         root.addNeighbor(temp2, "/");
         temp = new Node(13, false, "", "");
         temp2.addNeighbor(temp, "*");
-        Error error = new Error(17, "error", "error");
         temp2.addNeighbor(error, "not *");
         temp2 = new Node(14, false, "", "");
         temp.addNeighbor(temp2, "*");
@@ -203,27 +252,30 @@ public class CompilerScanner
 
 
 
-    public Pair<String, String> doDFA(String input) {
+    public Pair<String, Pair<String, String>> doDFA(String input) {
         Node node = root;
         int index = 0;
         input += "$";
         while (true) {
+            boolean errorFlag = false;
             if (node.isFinal) {
-                return node.getTokenFromInput(input.substring(0, index));
-            }
-            if (!("<*(),;[]{}=+-$".contains(Character.toString(input.charAt(index))) || Character.isLetterOrDigit(input.charAt(index)))) {
-                System.out.println("Irregular token:"+ input.charAt(index) + " detected at line #" + lineNumber);
-                System.out.println("token ignored!");
-                input = input.substring(0, index) + input.substring(index + 1);
-                this.errorHandlerIndex++;
+                Pair<String, String>pair = node.getTokenFromInput(input.substring(0, index));
+                input = input.substring(pair.getKey().length());
+                return new Pair<>(input.substring(0, input.length()-1), pair);
             }
             for (int i = 0; i < node.neighbors.size(); i++) {
                 if (node.canIterate(i, input.charAt(index))) {
+                    if (node.neighbors.get(i) instanceof Error) {
+                        input = ((Error) node.neighbors.get(i)).handleError(input, index);
+                        errorFlag = true;
+                        break;
+                    }
                     node = node.neighbors.get(i);
                     break;
                 }
             }
-            index++;
+            if (!errorFlag)
+                index++;
         }
     }
 
@@ -255,10 +307,13 @@ public class CompilerScanner
         String token;
 
 
-        Pair<String, String> pair;
+        Pair<String, Pair<String, String>> pair;
 //        while (true) {
 //            try {
         pair = doDFA(this.currentString);
+        Scanner tst = new Scanner(System.in);
+        tst.next();
+        System.out.println(pair.getKey() + " " + pair.getValue().getKey());
 //                break;
 //            } catch (Exception e) {
 //                e.printStackTrace();
@@ -266,16 +321,22 @@ public class CompilerScanner
 //                this.currentString = this.currentString.substring(1);
 //            }
 //        }
-        token = pair.getKey();
-        tokenType = pair.getValue();
+        token = pair.getValue().getKey();
+        tokenType = pair.getValue().getValue();
+        this.currentString = pair.getKey();
 
         if (lastTokenTypeDigitOrLetter && tokenType.equals("NUM") && (token.charAt(0) == '+'  || token.charAt(0) == '-')) {
             token = Character.toString(token.charAt(0));
             tokenType = token;
+//            this.currentString = this.currentString.substring(token.length()-1, this.currentString.length());
+//            System.out.println("befor edit: " + currentString + " token: " + token);
+            this.currentString = pair.getValue().getKey().substring(1) + this.currentString;
+//            System.out.println("after edit : " + currentString);
+
         }
-        this.currentString = this.currentString.substring(token.length()+errorHandlerIndex, this.currentString.length());
+
+//        this.currentString = this.currentString.substring(token.length()+errorHandlerIndex, this.currentString.length());
         lastTokenTypeDigitOrLetter = tokenType.equals("NUM") || tokenType.equals("ID");
-        this.errorHandlerIndex = 0;
 
 
         Attribute attribute = getEntryInSymbolTables(token);
