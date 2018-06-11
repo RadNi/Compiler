@@ -61,16 +61,16 @@ public class CodeGenerator
                 insertArrayVariable();
                 break;
             case "#insert_fun":
-                insertFunction(input);
+                insertFunction();
                 break;
             case "#end_fun":
                 functionEnd();
                 break;
             case "#add_set_param":
-                addAndSetParam(input, "int");
+                addAndSetParam(input);
                 break;
-            case "#add_set_param_array":
-                addAndSetParam(input, "array");
+            case "#override_to_array":
+                addAndSetParam(input);
                 break;
             case "#scope_start":
                 symbolTables.add(new SymbolTable());
@@ -107,7 +107,7 @@ public class CodeGenerator
                 assign();
                 break;
             case "#push_add":
-                pushAddress(input);
+                pushAddress();
                 break;
             case "#push_final_address":
                 pushArrayFinalAddress();
@@ -129,6 +129,10 @@ public class CodeGenerator
                 break;
             case "#add_arg":
                 addArgument();
+                break;
+            case "#pop_and_scope_start":
+                pop(1);
+                symbolTables.add(new SymbolTable());
                 break;
         }
     }
@@ -310,8 +314,10 @@ public class CodeGenerator
         importantTemps.get(importantTemps.size() - 1).add(result);
     }
 
-    private void pushAddress(String input)
+    private void pushAddress()
     {
+        String input = getFromSSTop(0);
+        pop(1);
         String varNum = findVarAddress(input);
         String addressTemp = getTemp();
         addToProgramBlock("mult", new String[]{"#" + varNum, "#4", addressTemp}, i);
@@ -441,20 +447,30 @@ public class CodeGenerator
         i++;
     }
 
-    private void addAndSetParam(String input, String type)
+    private void overrideTypeToArray()
+    {
+        String input = getFromSSTop(0);
+        String functionName = getFromSSTop(0);
+        Attribute attribute = findAttribute(functionName);
+        attribute.getParams().remove(attribute.getParams().size() - 1);
+        attribute.addParam("array", input);
+    }
+
+    private void addAndSetParam(String input)
     {
         String paramType = getFromSSTop(0);
         if (paramType.equals("void"))
         {
-            System.out.println("Error: Invalid type for a parameter");
+            System.out.println("Error: Invalid type for parameter " + input);
         }
         pop(1);
 
         String functionName = getFromSSTop(0);
         Attribute attribute = findAttribute(functionName);
-        attribute.addParam(type, input);
+        attribute.addParam("int", input);
 
         findVarAddress(input);
+        push(input);
 
 //        String varNum = attribute.getVariableNumber();
 //        String address = getTemp();
@@ -478,8 +494,11 @@ public class CodeGenerator
         importantTemps.remove(importantTemps.size() - 1);
     }
 
-    private void insertFunction(String input) // TODO handle output
+    private void insertFunction() // TODO handle output
     {
+        String input = getFromSSTop(0);
+        pop(1);
+
         if (!mainAddress.equals(""))
         {
             System.out.println("Error: main is not the last function");

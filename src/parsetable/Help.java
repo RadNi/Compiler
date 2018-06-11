@@ -19,15 +19,67 @@ public class Help
     {
         Scanner in = new Scanner(System.in);
 
-        FileInputStream fis = new FileInputStream("productions.data");
-//        FileInputStream fis = new FileInputStream("pt.data");
+//        FileInputStream fis = new FileInputStream("productions.data");
+        FileInputStream fis = new FileInputStream("pt.data");
         ObjectInputStream ois = new ObjectInputStream(fis);
-//        ParseTableData parseTableData = (ParseTableData) ois.readObject();
-        productions = (ArrayList<Production>) ois.readObject();
+        ParseTableData parseTableData = (ParseTableData) ois.readObject();
+//        productions = (ArrayList<Production>) ois.readObject();
 
-        System.out.println();
+        readDataFromFile(parseTableData);
+
+        writeAllProductions(parseTableData);
+//        System.out.println();
 //        setProductions(in, parseTableData);
 //        saveProductions();
+    }
+
+    private static void writeAllProductions(ParseTableData parseTableData) throws FileNotFoundException
+    {
+        HashMap<String, Character> nonTerminalsToId = parseTableData.getNonTerminalsToId();
+        HashMap<String, Character> terminalsToId = parseTableData.getTerminalsToId();
+
+        try(Scanner in = new Scanner(new File("productions.txt")))
+        {
+            while (in.hasNext())
+            {
+                String line = in.nextLine();
+                String[] lineParts = line.split(" ");
+                System.out.print(lineParts[0] + " -> ");
+                for (int i = 3; i < lineParts.length; i++)
+                {
+                    if (nonTerminalsToId.containsKey(lineParts[i]))
+                    {
+                        System.out.print(nonTerminalsToId.get(lineParts[i]));
+                    } else if (terminalsToId.containsKey(lineParts[i]))
+                    {
+                        System.out.print(terminalsToId.get(lineParts[i]));
+                    }
+                }
+                System.out.println();
+            }
+        }
+    }
+
+    private static void readDataFromFile(ParseTableData parseTableData) throws FileNotFoundException
+    {
+        HashMap<Character, String> idToNonTerminals = parseTableData.getIdToNonTerminals();
+        HashMap<String, Character> nonTerminalsToId = parseTableData.getNonTerminalsToId();
+
+        idToNonTerminals.clear();
+        nonTerminalsToId.clear();
+
+        try(Scanner in = new Scanner(new File("productions.txt")))
+        {
+            while (in.hasNext())
+            {
+                String line = in.nextLine();
+                String[] lineParts = line.split(" ");
+                idToNonTerminals.put(lineParts[0].charAt(0), lineParts[1]);
+                nonTerminalsToId.put(lineParts[1], lineParts[0].charAt(0));
+            }
+        }
+        System.out.println();
+        saveParseTableData(parseTableData);
     }
 
     private static void saveProductions() throws IOException
