@@ -13,6 +13,7 @@ public class Attribute { // I blame RadNi for this mess
     private String varType;
     private String varAddress;
     private int arraySize;
+    private String variableNumber;
 
     private String functionType;
     private String functionAddress;
@@ -95,5 +96,15 @@ public class Attribute { // I blame RadNi for this mess
     public void setArraySize(int arraySize)
     {
         this.arraySize = arraySize;
+    }
+
+    public String getVariableNumber()
+    {
+        return variableNumber;
+    }
+
+    public void setVariableNumber(String variableNumber)
+    {
+        this.variableNumber = variableNumber;
     }
 }
