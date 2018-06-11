@@ -1,0 +1,69 @@
+A program to #file_start declaration-list EOF #main
+B declaration-list to declaration-list #push declaration
+B declaration-list to declaration
+C declaration to #dec_start var-declaration #dec_end
+C declaration to #dec_start fun-declaration #dec_end
+D var-declaration to #push type-specifier #push_id ID ; #insert_normal_id
+D var-declaration to #push type-specifier #push_id ID [ #push NUM ] #insert_array_id
+E type-specifier to int
+E type-specifier to void
+F fun-declaration to #push type-specifier #push_id ID #insert_fun ( params ) compound-stmt #end_fun
+G params to param-list
+G params to #push void #pop_and_scope_start
+H param-list to param-list , param
+H param-list to param
+I param to #push type-specifier #add_set_param ID 
+I param to #push type-specifier #add_set_param ID #override_to_array [ ]
+J compound-stmt to { local-declarations statement-list } #scope_end
+K local-declarations to local-declarations var-declaration
+K local-declarations to
+L statement-list to statement-list statement
+L statement-list to 
+M statement to expression-stmt
+M statement to #scope_start compound-stmt
+M statement to selection-stmt
+M statement to iteration-stmt
+M statement to return-stmt
+N expression-stmt to expression ; #pop
+N expression-stmt to ;
+O selection-stmt to if ( expression #save ) statement else #jpf_save statement #jp
+P iteration-stmt to while ( #label expression #save ) statement #while
+Q return-stmt to return ; #return_void
+Q return-stmt to return expression ; #return_int
+R expression to #push var = expression #assign
+R expression to simple-expression
+S var to #push ID #push_add
+S var to #push ID #push_add [ expression ] #push_final_address
+T simple-expression to additive-expression #push relop additive-expression #push_op_result
+T simple-expression to additive-expression
+U relop to <
+U relop to ==
+V additive-expression to additive-expression #push addop term #push_op_result
+V additive-expression to term
+W addop to +
+W addop to -
+X term to term * factor #push_op_result
+X term to factor
+Y factor to ( #pop expression )
+Y factor to var
+Y factor to call #call_end
+Y factor to #push NUM #push_num
+Z call to #push ID #call_start ( args ) #jp_to_func
+Á args to arg-list
+Á args to
+Ť arg-list to arg-list , expression #add_arg
+Ť arg-list to expression #add_arg
+Ć #file_start to
+Ď #push to
+É #dec_start to
+Ɋ #push_id to
+Ǵ #insert_fun to
+Ĥ #scope_start to
+Í #add_set_param to
+Ĵ #override_to_array to
+Ŕ #save to
+Ĺ #jpf_save to
+Ḿ #label to
+Ń #push_add to
+Ó #call_start to
+Ẃ #pop_and_scope_start to

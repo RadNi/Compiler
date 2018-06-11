@@ -522,6 +522,7 @@ public class CodeGenerator
 
         counters.add(0);
         importantTemps.add(new ArrayList<>());
+        symbolTables.add(new SymbolTable());
     }
 
     private void insertArrayVariable()
