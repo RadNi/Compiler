@@ -264,6 +264,10 @@ public class CompilerScanner
         this.root = this.makeTransitionDFA();
         this.errorHandler = errorHandler;
 
+        ArrayList<String>errors = new ArrayList<>();
+        errors.add("Fuck this Fucking Project");
+        errorHandler.addError(errors, "0", "Double Suicide");
+
         // for adding output function in global scope
 
         symbolTables.get(0).setSymbolTableEntry("output", new Attribute("ID", 1));
