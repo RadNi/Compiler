@@ -1,4 +1,5 @@
 import javafx.util.Pair;
+import util.ErrorHandler;
 import util.Node;
 import util.Production;
 
@@ -16,12 +17,14 @@ public class Parser
     private ArrayList<Pair<String, String>> parseStack;
     private HashMap<Pair<String, String>, Node> nodesMap;
     private CodeGenerator codeGenerator;
+    private ErrorHandler errorHandler;
 
 
-    public Parser(CodeGenerator codeGenerator, CompilerScanner scanner)
+    public Parser(CodeGenerator codeGenerator, CompilerScanner scanner, ErrorHandler errorHandler)
     {
         this.codeGenerator = codeGenerator;
         this.scanner = scanner;
+        this.errorHandler = errorHandler;
         initStack();
         // TODO init parseTable
         // TODO init productions
@@ -41,8 +44,11 @@ public class Parser
 
             if (parseOperation == null) {
                 // TODO handle error with panic mode
-                int stateNumber = giveStateNumberFromTopOfStack();
+                ArrayList<String>error = new ArrayList<>();
+                int lineNumber = scanner.getEntryInSymbolTables(token.getValue()).getLineNumber();
+                int stateNumber=0;
                 while (true) {
+                    stateNumber = giveStateNumberFromTopOfStack();
                     if (haseEntry(stateNumber) == null)
                         break;
                 }
@@ -50,8 +56,10 @@ public class Parser
                     String label = haseEntry(stateNumber);
                     while (!follow(label).contains(token.getValue())) {
                         token = scanner.getNextToken();
+                        error.add("token " + token.getValue()+ " removed from input to continue parsing");
                     }
                 }
+                errorHandler.addError(error, Integer.toString(lineNumber), "Unexpected Token");
                 parseOperation = parseTable.get(getStackTop() + getLabel(token));
             }
             // now you can continue parsing with token and stack
@@ -63,7 +71,7 @@ public class Parser
         }
     }
 
-    private int giveStateNumberFromTopOfStack() {   //TODO  please return state number of the Top of the stack !!!
+    private int giveStateNumberFromTopOfStack() {   //TODO  please return state number of Top of the stack !!!
         return 0;
     }
 

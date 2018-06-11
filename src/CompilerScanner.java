@@ -143,7 +143,32 @@ public class CompilerScanner
                         tokenType_ = input.substring(0, input.length() - 1);
                         break;
                     case "letter":
-                        tokenType_ = "ID";
+                        switch (token_){
+                            case "EOF":
+                                tokenType_ = "EOF";
+                                break;
+                            case "int":
+                                tokenType_ = "int";
+                                break;
+                            case "void":
+                                tokenType_ = "void";
+                                break;
+                            case "if":
+                                tokenType_ = "if";
+                                break;
+                            case "else":
+                                tokenType_ = "else";
+                                break;
+                            case "while":
+                                tokenType_ = "while";
+                                break;
+                            case "return":
+                                tokenType_ = "return";
+                                break;
+                            default:
+                                tokenType_ = "ID";
+                                break;
+                        }
                         break;
                     case "digit":
                         tokenType_ = "NUM";
@@ -241,14 +266,14 @@ public class CompilerScanner
 
         // for adding output function in global scope
 
-        symbolTables.get(0).setSymbolTableEntry("output", new Attribute("ID"));
+        symbolTables.get(0).setSymbolTableEntry("output", new Attribute("ID", 1));
 
     }
 
     private Pair<String, String > insertToTopStackSymbolTable(String token, String tokenType) {
         SymbolTable symbolTable = this.symbolTables.get(this.symbolTables.size()-1);
         if (symbolTable.getSymbolTableEntry(token) == null) {
-            symbolTable.setSymbolTableEntry(token, new Attribute(tokenType));
+            symbolTable.setSymbolTableEntry(token, new Attribute(tokenType, lineNumber));
         }
         Pair<String, Attribute> temp = new Pair<>(token, symbolTable.getSymbolTableEntry(token));
         return new Pair<>(temp.getValue().getType(), temp.getKey());
@@ -304,28 +329,13 @@ public class CompilerScanner
                 this.currentString = this.stringScanner.next();
             }
         }
-//        if (this.currentString.contains("   ")){
-//            System.out.println("eeeee");
-//        }
-
         String tokenType;
         String token;
 
 
         Pair<String, Pair<String, String>> pair;
-//        while (true) {
-//            try {
         pair = doDFA(this.currentString);
-//        Scanner tst = new Scanner(System.in);
-//        tst.next();
-//        System.out.println(pair.getKey() + " " + pair.getValue().getKey());
-//                break;
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                e.getMessage();
-//                this.currentString = this.currentString.substring(1);
-//            }
-//        }
+
         token = pair.getValue().getKey();
         tokenType = pair.getValue().getValue();
         this.currentString = pair.getKey();
@@ -380,7 +390,7 @@ public class CompilerScanner
     }
 
     @Nullable
-    private Attribute getEntryInSymbolTables(String token) {
+    public Attribute getEntryInSymbolTables(String token) {
         SymbolTable symbolTable;
         for (int i = this.symbolTables.size() - 1; i >= 0; i--) {
             symbolTable = this.symbolTables.get(i);

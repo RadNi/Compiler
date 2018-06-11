@@ -14,18 +14,20 @@ public class Attribute { // I blame RadNi for this mess
     private String varAddress;
     private int arraySize;
     private String variableNumber;
+    private int lineNumber;
 
     private String functionType;
     private String functionAddress;
     private ArrayList<Pair<String, String>> params;
 
-    public Attribute(String type) {
+    public Attribute(String type, int lineNumber) {
         this.type = type;
         this.varType = null;
         this.varAddress = null;
         this.arraySize = -1;
         this.functionType = null;
         this.functionAddress = null;
+        this.lineNumber = lineNumber;
         this.params = new ArrayList<>();
     }
 
@@ -96,6 +98,10 @@ public class Attribute { // I blame RadNi for this mess
     public void setArraySize(int arraySize)
     {
         this.arraySize = arraySize;
+    }
+
+    public int getLineNumber() {
+        return lineNumber;
     }
 
     public String getVariableNumber()
